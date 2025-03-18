@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume to Markdown Converter</title>
+</head>
+
+<body>
+    <h1>Upload Resume and Enter Job Description</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="jd">Job Description:</label><br>
+        <textarea id="jd" name="jd" rows="10" cols="50"></textarea><br><br>
+
+        <label for="resume">Upload Resume (PDF or DOCX):</label><br>
+        <input type="file" id="resume" name="resume" accept=".pdf,.docx"><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+
+</html>
