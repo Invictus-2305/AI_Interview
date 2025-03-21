@@ -7,8 +7,8 @@ import threading
 import time
 from dotenv import load_dotenv
 import os
-from modules.generate_questions import generate_questions
-from modules.generate_audio import generate_audio_for_questions
+# from modules.generate_questions import generate_questions 
+# from modules.generate_audio import generate_audio_for_questions
 import json
 import speech_recognition as sr
 from io import BytesIO
@@ -121,7 +121,7 @@ def check_questions():
     if generated_questions:
         questions = json.loads(generated_questions)
         # Start a background thread to generate audio for questions
-        threading.Thread(target=generate_audio_for_questions, args=(questions,)).start()
+        # threading.Thread(target=generate_audio_for_questions, args=(questions,)).start()
         return jsonify({"status": "done", "questions": questions})
     else:
         return jsonify({"status": "generating"})

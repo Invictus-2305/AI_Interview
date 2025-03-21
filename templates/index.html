@@ -4,31 +4,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
+    <title>Welcome to Interview Prep</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a; /* Dark background */
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #ffd700; /* Gold accent */
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: #e0e0e0;
+        }
+
+        #startButton {
+            background: #ffd700; /* Gold accent */
+            color: #1a1a1a; /* Dark text */
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        #startButton:hover {
+            background: #ffcc00; /* Brighter gold on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        #startButton:disabled {
+            background: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            color: #888;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #ffd700; /* Gold accent */
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #ffd700; /* Gold accent */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+    <!-- Inter Font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <h1>Welcome to the Interview Preparation Tool!</h1>
-    <p>Please allow microphone access to proceed.</p>
-    <button id="startButton">Allow Microphone Access</button>
-    <p id="status"></p>
+    <div class="container">
+        <h1>Welcome to Interview Prep!</h1>
+        <p>Please allow microphone access to get started with your interview preparation.</p>
+        <button id="startButton">Allow Microphone Access</button>
+        <div id="loading" class="spinner"></div>
+        <p id="status"></p>
+    </div>
 
     <script>
         document.getElementById('startButton').addEventListener('click', function () {
+            const statusElement = document.getElementById('status');
+            const loadingElement = document.getElementById('loading');
+            const buttonElement = document.getElementById('startButton');
+
+            // Disable button and show spinner
+            buttonElement.disabled = true;
+            loadingElement.style.display = 'block';
+            statusElement.textContent = 'Requesting microphone access...';
+
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(function (stream) {
-                    document.getElementById('status').textContent = 'Microphone access granted. Testing...';
-                    // Test the microphone by checking if audio tracks are available
+                    statusElement.textContent = 'Microphone access granted. Testing...';
                     if (stream.getAudioTracks().length > 0) {
-                        document.getElementById('status').textContent = 'Microphone is working!';
-                        // Redirect to /home
-                        window.location.href = "/home";
+                        statusElement.textContent = 'Microphone is working! Redirecting...';
+                        setTimeout(() => {
+                            window.location.href = "/home";
+                        }, 1000); // Simulate a delay for better UX
                     } else {
-                        document.getElementById('status').textContent = 'No audio tracks found.';
+                        statusElement.textContent = 'No audio tracks found.';
                     }
                 })
                 .catch(function (err) {
-                    document.getElementById('status').textContent = 'Microphone access denied: ' + err.message;
+                    statusElement.textContent = 'Microphone access denied: ' + err.message;
+                })
+                .finally(function () {
+                    // Re-enable button and hide spinner
+                    buttonElement.disabled = false;
+                    loadingElement.style.display = 'none';
                 });
         });
     </script>

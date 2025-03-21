@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -15,6 +15,129 @@
     <button id="stopRecording" style="display: none;">Stop Recording</button>
 
     <script src="{{ url_for('static', filename='scripts/waiting.js') }}"></script>
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview App</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a; /* Dark background */
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #ffd700; /* Gold accent */
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #e0e0e0;
+            margin: 10px 0;
+        }
+
+        #status {
+            font-weight: 600;
+            color: #ffd700; /* Gold accent */
+        }
+
+        #question {
+            font-size: 1.2rem;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        #timer {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffd700; /* Gold accent */
+            margin-top: 20px;
+        }
+
+        #stopRecording {
+            background: #ffd700; /* Gold accent */
+            color: #1a1a1a; /* Dark text */
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            margin-top: 30px;
+            display: none;
+        }
+
+        #stopRecording:hover {
+            background: #ffcc00; /* Brighter gold on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            #question {
+                font-size: 1rem;
+            }
+
+            #timer {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+    <!-- Inter Font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Please wait while we generate questions...</h1>
+        <p id="status">Loading...</p>
+        <p id="question"></p>
+        <p id="timer"></p>
+        <button id="stopRecording">Stop Recording</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='scripts/waiting.js') }}"></script>
+
 </body>
 
 </html>

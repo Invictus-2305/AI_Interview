@@ -1,5 +1,5 @@
-from kokoro import KPipeline
-import soundfile as sf
+# from kokoro import KPipeline
+# import soundfile as sf
 
 
 pipeline = KPipeline(lang_code='a')
