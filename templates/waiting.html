@@ -5,10 +5,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interview App</title>
+    <style>
+        #progressBarContainer {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin-top: 20px;
+            transition: opacity 0.5s ease; /* Smooth transition for hiding */
+        }
+
+        #progressBar {
+            width: 0%;
+            height: 30px;
+            background-color: #4caf50;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.5s ease; /* Smooth transition for progress */
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Please wait will we generate questions</h1>
+    <h1>Please wait while we generate questions</h1>
+    <div id="progressBarContainer">
+        <div id="progressBar">0%</div>
+    </div>
     <p id="status"></p>
     <p id="question"></p>
     <p id="timer"></p>
