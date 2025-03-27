@@ -9,12 +9,6 @@ question: The interview question designed to evaluate a specific skill, experien
 
 skill_set: The specific skill(s) or competency(ies) the question is targeting (e.g., programming, teamwork, problem-solving, etc.).
 
-difficulty_level: The level of difficulty of the question (e.g., Beginner, Intermediate, Advanced).
-
-relevance: A score from 1 to 10 indicating how closely the question aligns with the job requirements and candidate’s resume.
-
-question_type: The type of question (e.g., Technical, Behavioral, Hypothetical, Situational, etc).
-
 enclose the json objects in a list and stick to the format mentioned above and generate the questions. and response should only contain json and nothing else.
 '''
 
@@ -22,7 +16,7 @@ def generate_questions(job_description, resume):
     """Generate interview questions using the Ollama model."""
     print("question generation started")
     global generated_questions
-    response: ChatResponse = chat(model='deepseek-r1:latest', messages=[
+    response: ChatResponse = chat(model='gemma3', messages=[
         {"role": "system", "content": System_prompt},
         {"role": "user", "content": f"Ask 10 questions based on job description: {job_description} and resume: {resume} of the candidate. Response should only contain JSON and nothing else."}
     ])

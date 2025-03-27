@@ -4,39 +4,108 @@ let mediaRecorder;
 let audioChunks = [];
 let countdownTimer;
 let mediaStream; // To hold the media stream for stopping it later
+let progress = 0; // Track progress globally
 
 // Play the intro audio when the page loads
 window.onload = function () {
   fetchQuestions();
 };
 
+function updateProgressBar(percentage, message) {
+  const progressBar = document.getElementById("progressBar");
+  const progressBarContainer = document.getElementById("progressBarContainer");
+
+  progressBar.style.width = percentage + "%";
+  progressBar.textContent = percentage + "%";
+  document.getElementById("status").textContent = message;
+
+  // Hide the progress bar after reaching 100%
+  if (percentage >= 100) {
+    setTimeout(() => {
+      progressBarContainer.style.display = "none"; // Hide the progress bar container
+    }, 500); // Delay hiding for 1 second to show the final state
+  }
+}
+
 function fetchQuestions() {
-  fetch("/check_questions")
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.status === "done") {
-        questions = data.questions;
-        const introAudio = new Audio("/static/audios/intro.wav");
-        introAudio
-          .play()
-          .then(() => {
-            console.log("Intro audio is playing");
-            document.getElementsByTagName("h1")[0].textContent =
-              "Interview Process";
-            introAudio.addEventListener("ended", () => {
-              console.log("Intro audio finished");
-              startRecordingProcess(); // Start the recording process after the intro
-            });
-          })
-          .catch((error) => {
-            console.error("Intro audio playback failed:", error);
-            alert("Failed to play intro audio. Click OK to retry.");
-          });
-      } else {
-        setTimeout(fetchQuestions, 5000); // Retry after 5 seconds
-      }
+  // Initial progress update
+  if (progress === 0) {
+    smoothProgressUpdate(10, "Processing JD and Resume");
+  }
+
+  // Simulate processing JD and Resume
+  setTimeout(() => {
+    smoothProgressUpdate(40, "Extracting skills, projects, requirements, etc.");
+
+    // Simulate extracting skills, projects, etc.
+    setTimeout(() => {
+      smoothProgressUpdate(41, "Generating questions");
+
+      // Fetch questions from the backend
+      fetch("/check_questions")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "done") {
+            // Smooth progress update to 80% after questions are generated
+            smoothProgressUpdate(80, "Finalizing");
+
+            // Simulate finalizing (e.g., preparing audio, etc.)
+            setTimeout(() => {
+              // Smooth progress update to 100% after finalizing
+              smoothProgressUpdate(100, "Completed");
+
+              // Store questions and start intro audio
+              questions = data.questions;
+              startIntroAudio();
+            }, 2000);
+          } else {
+            setTimeout(() => {
+              if (progress < 78){
+                progress += 1;
+                updateProgressBar(progress, "Generating questions");
+              }
+              fetchQuestions();
+            }, 5000);
+          }
+        })
+        .catch((error) => console.error("Failed to fetch questions:", error));
+    }, 2000);
+  }, 2000);
+}
+
+// Helper function for smooth progress updates
+function smoothProgressUpdate(targetProgress, message) {
+  const increment = 1; // Percentage points to increase each step
+  const intervalTime = 50; // Milliseconds between updates
+  
+  const interval = setInterval(() => {
+    if (progress < targetProgress) {
+      progress += increment;
+      if (progress > targetProgress) progress = targetProgress;
+      updateProgressBar(progress, message);
+    } else {
+      clearInterval(interval);
+    }
+  }, intervalTime);
+}
+
+function startIntroAudio() {
+  const introAudio = new Audio("/static/audios/intro.wav");
+  introAudio
+    .play()
+    .then(() => {
+      console.log("Intro audio is playing");
+      document.getElementsByTagName("h1")[0].textContent = "Interview Process";
+      document.getElementById("question").textContent = "We will be staring with you interview soon, till then why don't you introduce yourself."
+      introAudio.addEventListener("ended", () => {
+        console.log("Intro audio finished");
+        startRecordingProcess(); // Start the recording process after the intro
+      });
     })
-    .catch((error) => console.error("Failed to fetch questions:", error));
+    .catch((error) => {
+      console.error("Intro audio playback failed:", error);
+      alert("Failed to play intro audio. Click OK to retry.");
+    });
 }
 
 // Load the next question
@@ -61,8 +130,6 @@ function loadNextQuestion() {
         console.error("Failed to play question audio:", error);
         alert("Failed to play question audio. Click OK to retry.");
       });
-
-    
   } else {
     endInterview(); // End the interview if no more questions are left
   }
@@ -86,34 +153,6 @@ function endInterview() {
   // Export the DataFrame to CSV
   // exportCSV();
 }
-
-// function exportCSV() {
-//   fetch("/export_csv", {
-//     method: "GET",
-//   })
-//     .then((response) => {
-//       if (response.ok) {
-//         return response.blob();
-//       } else {
-//         throw new Error("Failed to export CSV");
-//       }
-//     })
-//     .then((blob) => {
-//       // Create a link element to download the CSV file
-//       const url = window.URL.createObjectURL(blob);
-//       const a = document.createElement("a");
-//       a.href = url;
-//       a.download = "interview_responses.csv";
-//       document.body.appendChild(a);
-//       a.click();
-//       document.body.removeChild(a);
-//       window.URL.revokeObjectURL(url);
-//     })
-//     .catch((error) => {
-//       console.error("Error exporting CSV:", error);
-//       alert("Failed to export CSV. Please try again.");
-//     });
-// }
 
 // Start recording
 function startRecording() {
@@ -292,3 +331,4 @@ document.addEventListener("DOMContentLoaded", () => {
     stopRecording(true); // Manually stop recording
   });
 });
+

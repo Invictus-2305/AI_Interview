@@ -7,7 +7,7 @@ import threading
 import time
 from dotenv import load_dotenv
 import os
-from modules.generate_questions import generate_questions
+from modules.generate_questions import generate_questions 
 from modules.generate_audio import generate_audio_for_questions
 import json
 import speech_recognition as sr
@@ -19,25 +19,6 @@ r = sr.Recognizer()
 
 # DataFrame to store introduction, questions, and responses
 questions_responses_df = pd.DataFrame(columns=["Type", "Content", "User Response"])
-
-temp = '''[
-  {
-    "question": "What is a list in Python?",
-    "skill_set": ["Python"]
-  },
-  {
-    "question": "How do you create a function in Python?",
-    "skill_set": ["Python"]
-  },
-  {
-    "question": "What is the difference between a tuple and a list in Python?",
-    "skill_set": ["Python"]
-  },
-  {
-    "question": "How do you handle exceptions in Python?",
-    "skill_set": ["Python"]
-  }
-]'''
 
 def docx_to_markdown(file_path):
     doc = Document(file_path)
@@ -51,10 +32,8 @@ def generate_questions_thread(jd, md_text):
     global generated_questions, questions_responses_df
     try:
         # Generate questions using the Ollama model
-        # generated_questions = generate_questions(jd, md_text)
-        # questions = json.loads(generated_questions)
-        generated_questions = temp
-        questions = json.loads(temp)
+        generated_questions = generate_questions(jd, md_text)
+        questions = json.loads(generated_questions)
         # Initialize the DataFrame with the introduction
         global questions_responses_df
         questions_responses_df = pd.DataFrame(columns=["Type", "Content", "User Response"])
