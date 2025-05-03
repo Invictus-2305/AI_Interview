@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview App</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #ffd700;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #e0e0e0;
+            margin: 10px 0;
+        }
+
+        #status {
+            font-weight: 600;
+            color: #ffd700;
+        }
+
+        #question {
+            font-size: 1.2rem;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        #timer {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffd700;
+            margin-top: 20px;
+        }
+
+        /* Progress Bar */
+        #progressBarContainer {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin-top: 20px;
+            height: 30px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        #progressBar {
+            width: 0%;
+            height: 100%;
+            background: #ffd700;
+            text-align: center;
+            line-height: 30px;
+            color: #1a1a1a;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+
+        /* Visualizer Styles */
+        .visualizer-container {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        #visualizer {
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 50%;
+            width: 250px;
+            height: 250px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3),
+                        inset 0 0 20px rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); }
+            100% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.5); }
+        }
+
+        /* Stop Recording Button */
+        #stopRecording {
+            background: #ffd700;
+            color: #1a1a1a;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            margin-top: 30px;
+            display: none;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #stopRecording:hover {
+            background: #ffcc00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Animated Recording Indicator */
+        #recordingIndicator {
+            display: none;
+            width: 10px;
+            height: 10px;
+            background: #ff0000;
+            border-radius: 50%;
+            margin: 20px auto;
+            animation: pulse 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0.6;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            #visualizer {
+                width: 200px;
+                height: 200px;
+            }
+
+            #question {
+                font-size: 1rem;
+            }
+
+            #timer {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+    <style>
+        /* Add this to your existing styles */
+        .visualizer-container {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .visualizer-container.visible {
+            opacity: 1;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Please wait while we generate questions</h1>
+        <p id="status">Loading...</p>
+        <div id="progressBarContainer">
+            <div id="progressBar">0%</div>
+        </div>
+        
+        <!-- Audio Visualizer -->
+        <div class="visualizer-container">
+            <canvas id="visualizer"></canvas>
+        </div>
+        
+        <div id="recordingIndicator"></div>
+        <p id="question"></p>
+        <p id="timer"></p>
+        <button id="stopRecording">Stop Recording</button>
+    </div>
+
+    <audio id="audioElement" src="{{ url_for('static', filename='audios/intro.wav') }}"></audio>
+
+    <script src="{{ url_for('static', filename='scripts/waiting.js') }}"></script>
+</body>
+
+</html>

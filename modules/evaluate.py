@@ -1,28 +1,53 @@
 from ollama import chat
 from ollama import ChatResponse
-import re
-import time
+import json
 
 System_prompt = '''
-you will be provided with a question and a answer. Please rate the answer on a scale of 0 to 10 based on clarity, relevance, accuracy, and completeness. If the score is less than 7, provide an expected response or improvements. Always output the evaluation only in JSON format with the following structure:
+You will evaluate interview responses based on:
+1. Technical accuracy (for technical questions)
+2. Clarity and structure
+3. Relevance to question
+4. Depth of knowledge
 
+Provide ratings (0-10) for each category and overall score.
+Include specific feedback and expected response if score < 7.
+
+Output in this JSON format:
 {
-  "score": "Evaluation score (0-10)",
-  "feedback": "Feedback or suggestions for improvement”,
-  "expected_response": "Expected or improved response (if score < 7 else None)”
+  "technical_score": 0-10,
+  "clarity_score": 0-10,
+  "relevance_score": 0-10,
+  "depth_score": 0-10,
+  "overall_score": 0-10,
+  "feedback": "Detailed feedback",
+  "expected_response": "Only if score < 7"
 }
-
 '''
 
 def evaluate(question, answer):
-    """Generate interview questions using the Ollama model."""
-    global generated_questions
+    """Evaluate a single interview response."""
     response: ChatResponse = chat(model='gemma3', messages=[
         {"role": "system", "content": System_prompt},
-        {"role": "user", "content": f"evaluate teh user response : {answer} for the question : {question} and provide the evaluation in JSON format."}
+        {"role": "user", "content": f"Question: {question}\nAnswer: {answer}"}
     ])
-    response_text = response['message']['content']
-    return response_text[7:-3]
+    
+    try:
+        # Extract JSON from response
+        response_text = response['message']['content']
+        if response_text.startswith('```json') and response_text.endswith('```'):
+            response_text = response_text[7:-3].strip()
+        return json.loads(response_text)
+    except json.JSONDecodeError:
+        print("Failed to parse evaluation response")
+        return {
+            "technical_score": 0,
+            "clarity_score": 0,
+            "relevance_score": 0,
+            "depth_score": 0,
+            "overall_score": 0,
+            "feedback": "Evaluation failed",
+            "expected_response": ""
+        }
 
 
 if __name__ == "__main__":
@@ -34,4 +59,4 @@ if __name__ == "__main__":
     generated_questions = evaluate(question, answer)
 
     # Print the generated questions
-    print(generated_questions)
+    # print(generated_questions)

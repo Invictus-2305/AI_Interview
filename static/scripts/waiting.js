@@ -384,6 +384,72 @@ function endInterview() {
     mediaStream.getTracks().forEach((track) => track.stop());
     mediaStream = null;
   }
+
+  // Show report generation button
+  const reportButton = document.createElement("button");
+  reportButton.id = "generateReportBtn";
+  reportButton.textContent = "Generate Report";
+  reportButton.style.margin = "20px auto";
+  reportButton.style.padding = "10px 20px";
+  reportButton.style.display = "block";
+  reportButton.style.backgroundColor = "#4CAF50";
+  reportButton.style.color = "white";
+  reportButton.style.border = "none";
+  reportButton.style.borderRadius = "4px";
+  reportButton.style.cursor = "pointer";
+  
+  reportButton.addEventListener("click", generateReport);
+  
+  const container = document.querySelector(".container");
+  container.appendChild(reportButton);
+}
+
+function generateReport() {
+  const reportBtn = document.getElementById("generateReportBtn");
+  const statusElement = document.getElementById("status");
+  
+  if (reportBtn) {
+    reportBtn.textContent = "Generating Report...";
+    reportBtn.disabled = true;
+  }
+  statusElement.textContent = "Generating your evaluation report...";
+
+  fetch("/generate_report")
+    .then((response) => {
+      if (!response.ok) {
+        return response.json().then(err => { throw new Error(err.error || "Failed to generate report"); });
+      }
+      return response.blob();
+    })
+    .then((blob) => {
+      if (blob.size === 0) {
+        throw new Error("Empty report received");
+      }
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "interview_report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      statusElement.textContent = "Report generated successfully!";
+      if (reportBtn) {
+        reportBtn.textContent = "Download Report";
+        reportBtn.onclick = () => a.click(); // Allow re-download
+      }
+    })
+    .catch((error) => {
+      console.error("Report generation error:", error);
+      statusElement.textContent = `Error: ${error.message}`;
+      if (reportBtn) {
+        reportBtn.textContent = "Try Again";
+        reportBtn.disabled = false;
+        reportBtn.onclick = generateReport;
+      }
+    });
 }
 
 // Start recording
@@ -497,7 +563,7 @@ function startRecordingProcess() {
   startCountdown(5, () => {
     startRecording();
     document.getElementById("stopRecording").style.display = "block";
-    startCountdown(15, () => {
+    startCountdown(60, () => {
       stopRecording();
     });
   });
