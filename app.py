@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 import pymupdf4llm
 import pathlib
 from docx import Document
@@ -9,17 +9,24 @@ from dotenv import load_dotenv
 import os
 from modules.generate_questions import generate_questions 
 from modules.generate_audio import generate_audio_for_questions
+from modules.evaluate import evaluate
 import json
 import speech_recognition as sr
 from io import BytesIO
 import pandas as pd
+from modules.generate_report import generate_report
+from flask import send_file
 
 app = Flask(__name__)
 r = sr.Recognizer()
 
 # DataFrame to store introduction, questions, and responses
-questions_responses_df = pd.DataFrame(columns=["Type", "Content", "User Response"])
-
+temp = '''[
+  {
+    "question": "What is a list in Python?",
+    "skill_set": ["Python"]
+  }
+]'''
 def docx_to_markdown(file_path):
     doc = Document(file_path)
     md_text = ""
@@ -29,30 +36,60 @@ def docx_to_markdown(file_path):
 
 def generate_questions_thread(jd, md_text):
     """Generate questions and store them in the DataFrame."""
-    global generated_questions, questions_responses_df
+    global generated_questions, questions_responses_df, num_questions
     try:
         # Generate questions using the Ollama model
         generated_questions = generate_questions(jd, md_text)
         questions = json.loads(generated_questions)
+        # generated_questions = temp
+        # questions = json.loads(temp)
         # Initialize the DataFrame with the introduction
         global questions_responses_df
-        questions_responses_df = pd.DataFrame(columns=["Type", "Content", "User Response"])
+        questions_responses_df = pd.DataFrame(columns=["Type", "Content", "User Response", "Score", "Feedback", "Expected Response"])
         questions_responses_df = pd.concat(
             [questions_responses_df, pd.DataFrame([{"Type": "Introduction", "Content": "Introduction", "User Response": None}])],
             ignore_index=True,
         )
 
         # Add questions to the DataFrame using pd.concat
-        new_rows = [{"Type": "Question", "Content": q["question"], "User Response": None} for q in questions]
+        new_rows = [{"Type": "Question", "Content": q["question"], "User Response": None, "Score" : None, "Feedback": None, "Expected Response" : None} for q in questions]
         questions_responses_df = pd.concat(
             [questions_responses_df, pd.DataFrame(new_rows)], ignore_index=True
         )
-
+        global num_questions
+        num_questions = questions_responses_df.shape[0]
         print("Questions generated and added to DataFrame:")
         print(questions_responses_df)
 
     except Exception as e:
         print(f"Error generating questions: {e}")
+
+# def evaluate_thread(question, user_response, current_index):
+#     """Evaluate the user's response to a question."""
+#     try:
+#         evaluation = evaluate(question, user_response)
+#         # Check if evaluation is not empty before parsing
+#         if evaluation and evaluation.strip():
+#             response = json.loads(evaluation)
+            
+#             # Update the DataFrame with evaluation results
+#             questions_responses_df.at[current_index, "Score"] = int(response.get("score", 0))
+#             questions_responses_df.at[current_index, "Feedback"] = response.get("feedback", "")
+#             questions_responses_df.at[current_index, "Expected Response"] = response.get("expected_response", "")
+            
+#             # Check if all questions have been evaluated
+#             total_questions = len(questions_responses_df) - 1  # Subtract 1 for introduction
+#             if total_questions == current_index:
+#                 print("All questions evaluated:")
+#                 print(questions_responses_df)
+#                 return url_for("show_results")
+#         else:
+#             print("Empty evaluation response received")
+            
+#     except json.JSONDecodeError as e:
+#         print(f"Error parsing evaluation response: {e}")
+#     except Exception as e:
+#         print(f"Error in evaluation thread: {e}")
 
 @app.route("/", methods=["GET"])
 def index():
@@ -90,9 +127,9 @@ def home():
 
     return render_template("home.html")
 
-@app.route("/waiting")
+@app.route("/interview-process", methods=["GET"])
 def waiting():
-    return render_template("waiting.html")
+    return render_template("interview-process.html")
 
 @app.route("/check_questions")
 def check_questions():
@@ -138,7 +175,7 @@ def stt():
 
         # Print the DataFrame to the terminal (for debugging)
         print("Updated DataFrame:")
-        print(questions_responses_df)
+        print(questions_responses_df[1:3])
 
         # Return the recognized text in the response
         return jsonify({"status": "success", "text": text}), 200
@@ -148,20 +185,59 @@ def stt():
     except sr.RequestError as e:
         return jsonify({"error": f"Could not request results from Google Speech Recognition service; {e}"}), 500
 
-from flask import send_file
+@app.route("/results")
+def show_results():
+    global questions_responses_df
+    
+    # Convert NaN/None to empty strings for cleaner display
+    questions_responses_df = questions_responses_df.fillna('')
+    
+    # Convert to list of dictionaries for easy templating
+    results_data = questions_responses_df.to_dict('records')
+    
+    return render_template(
+        "results.html",
+        results=results_data,
+        columns=questions_responses_df.columns.tolist()
+    )
 
-@app.route("/export_csv", methods=["GET"])
-def export_csv():
+
+
+# @app.route("/export_csv", methods=["GET"])
+# def export_csv():
+#     global questions_responses_df
+#     try:
+#         # Save the DataFrame to a CSV file
+#         csv_file_path = "interview_responses.csv"
+#         questions_responses_df.to_csv(csv_file_path, index=False)
+
+#         # Send the CSV file as a response
+#         return send_file(csv_file_path, as_attachment=True)
+#     except Exception as e:
+#         return jsonify({"error": f"Failed to export CSV: {e}"}), 500
+
+@app.route("/generate_report", methods=["GET"])
+def generate_report_route():
     global questions_responses_df
     try:
-        # Save the DataFrame to a CSV file
-        csv_file_path = "interview_responses.csv"
-        questions_responses_df.to_csv(csv_file_path, index=False)
-
-        # Send the CSV file as a response
-        return send_file(csv_file_path, as_attachment=True)
+        # Ensure we have responses to evaluate
+        if questions_responses_df.empty or len(questions_responses_df[questions_responses_df['User Response'].notna()]) == 0:
+            return jsonify({"error": "No interview responses available to generate report"}), 400
+            
+        report_path = generate_report(questions_responses_df)
+        
+        if not pathlib.Path(report_path).exists():
+            raise FileNotFoundError("Report file was not created")
+            
+        return send_file(
+            report_path,
+            as_attachment=True,
+            mimetype='application/pdf',
+            download_name='interview_report.pdf'
+        )
     except Exception as e:
-        return jsonify({"error": f"Failed to export CSV: {e}"}), 500
+        print(f"Report generation error: {str(e)}")
+        return jsonify({"error": f"Failed to generate report: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
